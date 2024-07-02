@@ -63,7 +63,6 @@ export function tempoRestante(prazo){
     const dataDoPrazo = new Date(prazoDate)
     const dataDeAgora = new Date(nowDate);
     const diferencaDias = Math.floor((prazoDate - nowDate) / (1000 * 60 * 60 * 24));
-    console.log(diferencaDias);
 
     if(prazoDate < nowDate){
         return "Vencido";

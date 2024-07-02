@@ -1,6 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
+from sqlalchemy import asc, desc
 from routes.auth import get_current_usuario
 from models.projects import MultProjetosInput, ProjetoDelete, ProjetoInput, ProjetoUpdate, ProjetosDelete
 from database.schema import Projeto, get_session, Session
@@ -10,7 +11,7 @@ router = APIRouter()
 
 @router.get('/')
 async def get_projetos_publicos(session: Session = Depends(get_session)):
-    projetos = session.query(Projeto).options(joinedload(Projeto.usuario)).filter(Projeto.is_publico).all()
+    projetos = session.query(Projeto).options(joinedload(Projeto.usuario)).filter(Projeto.is_publico).order_by(asc(Projeto.prazo)).all()
     
     if projetos: 
         return [{
@@ -26,7 +27,7 @@ async def get_projetos_publicos(session: Session = Depends(get_session)):
 
 @router.get('/usuario')
 async def get_projetos_usuario(user: Annotated[dict, Depends(get_current_usuario)], session: Session = Depends(get_session)):
-    projetos = session.query(Projeto).filter(Projeto.usuario_id == user["id"]).all()
+    projetos = session.query(Projeto).filter(Projeto.usuario_id == user["id"]).order_by(desc(Projeto.criacao)).all()
     
     if projetos: 
         return projetos
