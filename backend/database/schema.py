@@ -22,6 +22,7 @@ class Projeto(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String(255), nullable=False)
     descricao = Column(Text, nullable=True)
+    link = Column(Text, nullable=True)
     criacao = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     prazo = Column(DateTime, nullable=True)
     is_publico = Column(Boolean)

@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
-from sqlalchemy import asc, desc
+from sqlalchemy import asc, case, desc
 from routes.auth import get_current_usuario
 from models.projects import MultProjetosInput, ProjetoDelete, ProjetoInput, ProjetoUpdate, ProjetosDelete
 from database.schema import Projeto, get_session, Session
@@ -11,13 +11,21 @@ router = APIRouter()
 
 @router.get('/')
 async def get_projetos_publicos(session: Session = Depends(get_session)):
-    projetos = session.query(Projeto).options(joinedload(Projeto.usuario)).filter(Projeto.is_publico).order_by(asc(Projeto.prazo)).all()
+    projetos = session.query(Projeto)\
+        .options(joinedload(Projeto.usuario))\
+        .filter(Projeto.is_publico)\
+        .order_by(case((Projeto.prazo > datetime.now().date(), 0), else_=1), asc(Projeto.prazo))\
+        .all()
+        # .order_by(asc(Projeto.prazo))\
+        # .filter(Projeto.prazo > datetime.now().date()).all()
+
     
     if projetos: 
         return [{
             "id": projeto.id,
             "criacao": projeto.criacao,
             "nome": projeto.nome,
+            "link": projeto.link,
             "descricao": projeto.descricao,
             "prazo": projeto.prazo,
             "usuario": projeto.usuario.username,
@@ -51,6 +59,7 @@ async def registrar_projeto(user: Annotated[dict, Depends(get_current_usuario)],
     
     projeto = Projeto(nome=projeto_input.nome.strip(),
                       descricao=projeto_input.descricao,
+                      link=projeto_input.link,
                       prazo=projeto_input.prazo,
                       is_publico=projeto_input.is_publico,
                       usuario_id=user["id"])
@@ -72,6 +81,7 @@ async def registrar_multiplos_projetos(user: Annotated[dict, Depends(get_current
             
             projeto = Projeto(nome=projeto_input.nome.strip(),
                               descricao=projeto_input.descricao,
+                              link=projeto_input.link,
                               prazo=projeto_input.prazo,
                               is_publico=projeto_input.is_publico,
                               usuario_id=user["id"])
@@ -101,14 +111,16 @@ async def alterar_projeto(user: Annotated[dict, Depends(get_current_usuario)], p
     
     if not projeto:
         raise HTTPException(status_code=404, detail='Projeto não encontrado')
-    
-    if projeto_update.nome.strip() != "":
+    if projeto_update.nome != None:
         projeto.nome = projeto_update.nome.strip()
-    if projeto_update.descricao != "":
+    if projeto_update.descricao != None:
         projeto.descricao = projeto_update.descricao
-    if projeto_update.prazo != "":
-        projeto.prazo = projeto_update.prazo
-    if projeto_update.is_publico != "":
+    if projeto_update.link != None:
+        projeto.link = projeto_update.link
+    
+    projeto.prazo = projeto_update.prazo
+
+    if projeto_update.is_publico != None:
         projeto.is_publico = projeto_update.is_publico
     
     session.add(projeto)

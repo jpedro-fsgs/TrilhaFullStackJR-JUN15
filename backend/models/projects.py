@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 class ProjetoInput(BaseModel):
     nome: str
     descricao: Optional[str]
+    link: Optional[str]
     prazo: Optional[datetime] = Field(description="Horário em UTC")
     is_publico: bool
 
@@ -15,6 +16,7 @@ class ProjetoUpdate(BaseModel):
     id: int
     nome: Optional[str]
     descricao: Optional[str]
+    link: Optional[str]
     prazo: Optional[datetime]= Field(description="Horário em UTC")
     is_publico: Optional[bool]
 

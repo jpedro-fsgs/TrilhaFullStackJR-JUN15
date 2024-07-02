@@ -1,6 +1,7 @@
 //importação das funções para remover um projeto, receber a lista de projetos,
 //e setar o array de projetos global
 import { removerProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos } from "../data/data.js";
+import { linkIcon } from "./ui_adicionar_projetos.js";
 
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
@@ -27,14 +28,17 @@ exclusaoBotao.prepend(exclusaoBotaoIcon);
 
 const listaParaRemover = $(`<ul class="list-group"></ul>`)
 
-function criarItemLista(id, nome, is_publico) {
+function criarItemLista(id, nome, is_publico, link) {
 
     //o value de cada elemento é colocado como o id do item
     const itemLista = $(`<label for="flexCheck-${id}" id="${id}" role="button" class="list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
                             <div class="d-flex w-100 align-items-center justify-content-between">
-                                <span>
-                                    ${isPublicoIcon[Number(is_publico)]}
-                                    <strong class="mb-1 px-2">${nome}</strong>
+                                <span class="d-flex">
+                                    <span>
+                                        ${isPublicoIcon[Number(is_publico)]}
+                                        <strong class="mb-1 px-2">${nome}</strong>
+                                    </span>
+                                    ${link ? linkIcon : ""}
                                 </span>
                                 <div class="check-remove" id="check-remover-${id}">
                                     <label for="flexCheck-${id}" class="form-check-label">
@@ -85,7 +89,7 @@ function criarListaProjetos(projetos, setRemover){
     listaProjetos.empty();
     
     projetos.forEach(projeto => {
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.is_publico);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.is_publico, projeto.link);
         listaProjetos.append(itemLista);
     });
 

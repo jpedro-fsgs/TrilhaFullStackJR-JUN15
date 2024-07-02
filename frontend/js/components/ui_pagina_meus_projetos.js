@@ -2,6 +2,7 @@
 import { importMeusProjetos} from "../data/data.js";
 import { tempoRestante } from "./ui_pagina_projetos_publicos.js";
 import { slideDownAnchor } from "../main.js";
+import { linkIcon } from "./ui_adicionar_projetos.js";
 
 //elementos da página de exibição
 const projetoView = $("#view"); 
@@ -21,7 +22,7 @@ export const isPublicoIcon = [
 
 
 //criação da página com informações de cada projeto
-function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico) {
+function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link) {
     projetoView.empty();
     
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
@@ -31,6 +32,14 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico) {
     //formatação das datas para horário e localização em pt-BR
     const labelCriacao = `Criado: ${dateCriacao.toLocaleDateString('pt-BR')}`;
     const labelPrazo = prazo ? `Prazo: ${datePrazo.toLocaleDateString('pt-BR')}` : "";
+    const labelLink = link ? `
+    <span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
+            <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/>
+            <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/>
+        </svg>
+        <a href="${link}" rel="noopener noreferrer" target="_blank" class="lead">${link}</a>
+    </span>` : "";
 
     //criação do container com as informações do projeto
     const projetoViewBox = $(
@@ -44,7 +53,8 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico) {
                 ${isPublicoIcon[Number(is_publico)]}
                 </span>
                 <h1 class="text-body-emphasis mb-4">${nome}</h1>
-                <p class="lead">${descricao}</p>
+                ${labelLink}
+                <p class="lead mt-4">${descricao ? descricao : ""}</p>
             </div>
         </div>`);
 
@@ -54,20 +64,23 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico) {
 }
 
 //função que cria um item da lista , que mostra as informações do projeto ao ser clicado
-function criarItemLista(id, nome, descricao, prazo, criacao, is_publico) {
+function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link) {
 
     const itemLista = $(`<a id="${id}" role="button" class="list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
                             <div class="d-flex w-100 align-items-center justify-content-between">
-                                <span>
-                                    ${isPublicoIcon[Number(is_publico)]}
-                                    <strong class="mb-1 px-2">${nome}</strong>
+                                <span class="d-flex">
+                                    <span>
+                                        ${isPublicoIcon[Number(is_publico)]}
+                                        <strong class="mb-1 px-2">${nome}</strong>
+                                    </span>
+                                    ${link ? linkIcon : ""}
                                 </span>
                                 <small>${tempoRestante(prazo)}</small>
                             </div>
                         </a>`);
 
     itemLista.on("click", () => {
-        criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico);
+        criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link);
     })
     return itemLista;
 }
@@ -115,7 +128,7 @@ export async function showMeusProjetos() {
     //cria um item da lista pra cada projeto armazenado no array de projetos
     projetos.forEach(projeto => {
 
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico, projeto.link);
         itemLista.on("click", () => {
             $(".list-group-item").removeClass("active");
             itemLista.addClass("active");

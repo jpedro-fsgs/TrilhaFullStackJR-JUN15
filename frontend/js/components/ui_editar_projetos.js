@@ -4,6 +4,7 @@ import { editarProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos
 
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
+import { linkIcon } from "./ui_adicionar_projetos.js";
 
 import { slideDownAnchor } from "../main.js";
 
@@ -23,7 +24,7 @@ const projetoViewBoxText = $(`<div id="view-box-text" class="p-4 text-center bg-
 const zeroPad = (num, places) => String(num).padStart(places, '0');
 
 //cria a página do projeto, com o formulário para edição
-function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
+function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, link) {
     projetoViewBoxText.empty()
     projetoViewBox.empty()
     projetoView.empty();
@@ -48,6 +49,10 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
                 <input type="text" class="form-control" id="floatingNomeProjeto" placeholder="Nome do Projeto">
                 <label for="floatingNomeProjeto">Nome do Projeto</label>
             </div>
+            <div class="input-group input-group-sm mb-3">
+                <span class="input-group-text" id="inputGroup-sizing-sm">${linkIcon}</span>
+                <input type="url" id="linkProjeto" placeholder="(opcional) https://exemplo.com" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+            </div>
             <div class="form-floating mb-3">
                 <textarea class="form-control" rows="10" style="height:100%" id="floatingDescricao" placeholder="Descrição do Projeto"></textarea>
                 <label for="floatingDescricao">Descrição do Projeto</label>
@@ -68,6 +73,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
     //atribui os elementos do formulário
     const inputNomeProjeto = adicionarForm.find("#floatingNomeProjeto");
     const inputDescricaoProjeto = adicionarForm.find("#floatingDescricao");
+    const inputLinkProjeto = adicionarForm.find("#linkProjeto");
     const inputCheckPrazo = adicionarForm.find("#flexCheckPrazo");
     const inputPrazo = adicionarForm.find("#floatingPrazo");
     const inputIsPublico = adicionarForm.find("#is-publico");
@@ -75,6 +81,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
     //insere o nome e a descrição do projeto nos inputs
     inputNomeProjeto.val(nome);
     inputDescricaoProjeto.val(descricao);
+    inputLinkProjeto.val(link);
     //atribui data mínima ao dia corrente, new Date().toLocaleDateString('fr-ca') retorna a data atual no formato aceito
     inputPrazo.attr("min", new Date().toLocaleDateString('fr-ca'));
     //inclui a data, caso não seja null
@@ -107,6 +114,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
         //armazena os dados do input
         let nomeEdit = inputNomeProjeto.val();
         let descricaoEdit = inputDescricaoProjeto.val();
+        let linkEdit = inputLinkProjeto.val();
         //atribui o prazo caso o checkbox esteja marcado, atribui null caso contrário
         let prazoEdit = inputCheckPrazo.is(":checked") ? (inputPrazo.val() ? new Date(inputPrazo.val() + "T23:59:59Z") : null) : null;
         let isPublicoEdit = inputIsPublico.val() === "publico" ? true : false;
@@ -115,6 +123,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
         //atribui falso caso o valor seja o mesmo, ou se for vazio
         let nomeHasChanged = nomeEdit !== nome && nomeEdit !== "";
         let descricaoHasChanged = descricaoEdit !== descricao;
+        let linkHasChanged = linkEdit !==link;
         //o valor de prazo pode ser null, então primeiro é verificado se tanto o prazo e prazoEdit são truthy
         //caso sejam truthy, a string é fatiada para desconsiderar o horário e comparar somente a data
         let prazoHasChanged = prazo && prazoEdit ? prazoEdit.toISOString().slice(0, 10) !== prazo.slice(0, 10) : prazoEdit !== prazo;
@@ -122,7 +131,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
 
 
         //caso não haja alteração em nenhum, a função é retornada e encerrada
-        if(!nomeHasChanged && !descricaoHasChanged && !prazoHasChanged && !isPublicoHasChanged){
+        if(!nomeHasChanged && !descricaoHasChanged && !prazoHasChanged && !isPublicoHasChanged && !linkHasChanged){
             return;
         }
 
@@ -130,8 +139,9 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
         //a API somente altera o valor caso a string tenha algum conteúdo
         const novoProjeto = {
             id,
-            nome: nomeHasChanged ? nomeEdit : "", 
-            descricao: descricaoHasChanged ? descricaoEdit : "",
+            nome: nomeHasChanged ? nomeEdit : null, 
+            descricao: descricaoHasChanged ? descricaoEdit : null,
+            link: linkHasChanged ? linkEdit : null,
             prazo: prazoHasChanged ? prazoEdit : prazo,
             is_publico: isPublicoHasChanged ? isPublicoEdit : is_publico
         }
@@ -163,14 +173,17 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico) {
 }
 
 //cria os itens da lista, que ao ser clicado mostra a página de edição do projeto
-function criarItemLista(id, nome, descricao, prazo, criacao, is_publico) {
+function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link) {
 
     
     const itemLista = $(`<a id="${id}" role="button" class="list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
                             <div class="d-flex w-100 align-items-center justify-content-between">
-                                 <span>
-                                    ${isPublicoIcon[Number(is_publico)]}
-                                    <strong class="mb-1 px-2">${nome}</strong>
+                                <span class="d-flex">
+                                    <span>
+                                        ${isPublicoIcon[Number(is_publico)]}
+                                        <strong class="mb-1 px-2">${nome}</strong>
+                                    </span>
+                                    ${link ? linkIcon : ""}
                                 </span>
                                 <div class="form-check-label">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
@@ -181,7 +194,7 @@ function criarItemLista(id, nome, descricao, prazo, criacao, is_publico) {
                         </a>`);
 
     itemLista.on("click", () => {
-        criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico);
+        criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, link);
     })
     return itemLista;
 }
@@ -191,7 +204,7 @@ function criarListaProjetos(projetos){
     
     listaProjetos.empty();
     projetos.forEach(projeto => {
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico, projeto.link);
         listaProjetos.append(itemLista);
         itemLista.on("click", () => {
             $(".list-group-item").removeClass("active");

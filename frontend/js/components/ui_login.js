@@ -171,7 +171,7 @@ export function showLoginPage(){
 
     loginForm.on("submit", async(e) => {
         e.preventDefault();
-        const token = await validar_usuario(username.val(), password.val());
+        const token = await validar_usuario(username.val().trim(), password.val());
         if(!token){
             if(!username.hasClass("is-invalid")){
                 username.addClass("is-invalid");
@@ -218,7 +218,7 @@ export function showSignUp(){
 
     cadastrarForm.on("submit", async(e) => {
         e.preventDefault();
-        const usuario = await cadastrar_usuario(username.val(), password.val());
+        const usuario = await cadastrar_usuario(username.val().trim(), password.val());
         if(!usuario){
             if(!username.hasClass("is-invalid")){
                 username.addClass("is-invalid");
@@ -226,7 +226,7 @@ export function showSignUp(){
             }
             return;
         }
-        const token = await validar_usuario(username.val(), password.val());
+        const token = await validar_usuario(username.val().trim(), password.val());
 
         localStorage.setItem('access_token', token.access_token);
 
