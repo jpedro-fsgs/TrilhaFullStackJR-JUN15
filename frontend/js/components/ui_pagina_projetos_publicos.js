@@ -1,5 +1,6 @@
 //importa a função pra receber o array de projetos
 import { importProjetosPublicos } from "../data/data.js";
+import { slideDownAnchor } from "../main.js";
 
 //elementos da página de exibição
 const projetoView = $("#view"); 
@@ -134,9 +135,16 @@ export async function showProjetosPublicos() {
             </div>
         </div>`);
     //caso não haja projetos, mostra "Adicione um Projeto"
+    const mensagemAdicionarBox = projetoViewBox.find("h1")
     if(!projetos.length){
-    projetoViewBox.find("h1").text("Adicione um Projeto");
+        mensagemAdicionarBox.text("Adicione um Projeto");
+        mensagemAdicionarBox.on("click", () => {
+            $("#adicionar").click();
+        });
     }
+    projetoViewBox.on("click", () => {
+        slideDownAnchor();
+    })
     projetoView.append(projetoViewBox);
     
     //ícone e título da lista

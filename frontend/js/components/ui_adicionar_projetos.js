@@ -7,6 +7,8 @@ import { tempoRestante } from "./ui_pagina_projetos_publicos.js";
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
 
+import { slideDownAnchor } from "../main.js";
+
 //elementos da página de exibição
 const projetoView = $("#view");
 const listaProjetos = $("#lista-projetos");
@@ -18,7 +20,7 @@ const projetoViewBox = $(`<div class="container my-5"></div>`);
 const projetoViewBoxText = $(`<div id="view-box-text" class="p-4 text-center bg-body-tertiary rounded-3"></div>`);
 
 //formulário para adicionar novo projeto
-const adicionarForm = $(`
+const adicionarFormBase = $(`
     <form id="add-projeto-form">
         <select id="is-publico" class="form-select form-select-sm" style="width: 95px;" aria-label="Default select example">
             <option value="privado" selected>Privado</option>
@@ -80,6 +82,7 @@ export function showAdicionarProjeto() {
     //recebe o atual array de projetos
     let projetos = importMeusProjetos();
     
+    const adicionarForm = adicionarFormBase.clone()
     //atribui os elementos do formulário
     const inputNomeProjeto = adicionarForm.find("#floatingNomeProjeto");
     const inputDescricaoProjeto = adicionarForm.find("#floatingDescricao");
@@ -90,6 +93,7 @@ export function showAdicionarProjeto() {
     titulo.empty();
     listaProjetos.empty();
     projetoView.empty();
+    projetoViewBoxText.empty()
 
     // append do formulário no container de texto
     projetoViewBoxText.append(adicionarForm);
@@ -147,10 +151,21 @@ export function showAdicionarProjeto() {
         criarListaProjetos(atualizacaoProjetos["meus_projetos"]);
         setMeusProjetos(atualizacaoProjetos["meus_projetos"]);
         setProjetosPublicos(atualizacaoProjetos["projetos_publicos"])
-        alert(`${nome} criado com sucesso!`);
+        // alert(`${nome} criado com sucesso!`);
+        projetoViewBoxText.empty()
+        projetoViewBoxText.append(`
+            <div class="alert alert-info" role="alert">
+                ${nome} Adicionado!
+            </div>`);
+        const adicionarNovo = $(`<button type="button" class="btn btn-primary">Adicionar novo projeto</button>`);
+        adicionarNovo.on("click", () => {
+            showAdicionarProjeto();
+        })
+        projetoViewBoxText.append(adicionarNovo);
 
 
         //ao adicionar um novo projeto, a lista de projetos é rolada até o final pra mostrar o novo projeto
+        slideDownAnchor();
         listaProjetos[0].scrollTop = listaProjetos[0].scrollHeight;
 
     });

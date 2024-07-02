@@ -5,6 +5,8 @@ import { editarProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
 
+import { slideDownAnchor } from "../main.js";
+
 //elementos da página de exibição
 const listaProjetos = $("#lista-projetos")
 const projetoView = $("#view");
@@ -218,9 +220,13 @@ export function showEditarProjeto() {
             </div>
         </div>`));
 
+    const mensagemAdicionarBox = projetoView.find("h1")
     if(!projetos.length){
-        projetoViewBox.find("h1").text("Não há projetos cadastrados");
+        mensagemAdicionarBox.text("Não há projetos cadastrados");
     }
+    projetoView.on("click", () => {
+        slideDownAnchor();
+    });
     
     //ícone e título da lista
     const icon = $(`

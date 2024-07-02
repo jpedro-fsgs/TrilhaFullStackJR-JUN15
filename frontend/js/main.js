@@ -45,6 +45,13 @@ export function slideUpAnchor(){
     sidebar.removeClass("d-flex");
     sidebar.slideUp("slow");
 }
+export function slideDownAnchor(){
+    if(area.css("display") == "flex"){
+        return;
+    }
+    sidebar.addClass("d-flex");
+    sidebar.slideDown("slow");
+}
 
 
 //ação de exibir página
