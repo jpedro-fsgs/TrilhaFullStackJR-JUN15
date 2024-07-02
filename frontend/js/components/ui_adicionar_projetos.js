@@ -136,7 +136,7 @@ export function showAdicionarProjeto() {
         const nome = inputNomeProjeto.val();
         const descricao = inputDescricaoProjeto.val();
         //atribui o prazo caso o checkbox esteja marcado, atribui null caso contrário
-        const prazo = inputCheckPrazo.is(":checked") && inputPrazo.val() ? new Date(inputPrazo.val() + "T23:59:59") : null;
+        const prazo = inputCheckPrazo.is(":checked") && inputPrazo.val() ? new Date(inputPrazo.val() + "T23:59:59.999Z") : null;
         const is_publico = inputIsPublico.val() === "publico" ? true : false;
         
         //cria um objeto com os atributos

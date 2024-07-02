@@ -29,7 +29,7 @@ const buttonSignUp = $(`<button id="signup" type="button" class="btn btn-light m
 const settings = nomeUsuarioAtivo => $(`
     <div class="flex-shrink-0 btn-group dropdown mx-3">
           <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-            <strong>${nomeUsuarioAtivo}</strong>
+            <strong class="btn-primary">${nomeUsuarioAtivo}</strong>
           </a>
           <ul class="dropdown-menu dropdown-menu-end text-small shadow" style="">
             <li><a id="opcoes" class="dropdown-item" href="#">Opções</a></li>
@@ -96,7 +96,7 @@ const loginForm = $(`
         </div>
         <button class="btn btn-primary w-100 py-2 mt-4" type="submit">Entrar</button>
         <hr>
-        <button id="login-cadastrar" class="btn btn-outline-light w-100 py-2" type="button">Cadastrar</button>
+        <button id="login-cadastrar" class="btn btn-outline-primary w-100 py-2" type="button">Cadastrar</button>
   </form>`);
 
 const invalidFeedback = mensagem => (`

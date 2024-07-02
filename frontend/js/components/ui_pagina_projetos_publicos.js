@@ -20,7 +20,10 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, usuario) {
     
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
     const dateCriacao = new Date(criacao + 'Z');
-    const datePrazo = new Date(prazo  + 'Z');
+    const datePrazo = new Date(prazo);
+
+    dateCriacao.setHours(23, 59, 59);
+    datePrazo.setHours(23, 59, 59);
 
     //formatação das datas para horário e localização em pt-BR
     const labelCriacao = `Criado: ${dateCriacao.toLocaleDateString('pt-BR')}`;
@@ -57,14 +60,17 @@ export function tempoRestante(prazo){
         return "";
     }
     
-    const nowDate = Date.now();
-    const prazoDate = Date.parse(prazo + 'Z')
+    const nowDate = Date.now()
+    const prazoDate = Date.parse(prazo)
 
-    const dataDoPrazo = new Date(prazoDate)
+    const dataDoPrazo = new Date(prazoDate);
     const dataDeAgora = new Date(nowDate);
-    const diferencaDias = Math.floor((prazoDate - nowDate) / (1000 * 60 * 60 * 24));
+    dataDoPrazo.setHours(23, 59, 59);
+    dataDeAgora.setHours(0, 0, 0);
 
-    if(prazoDate < nowDate){
+    const diferencaDias = Math.floor((dataDoPrazo.getTime() - dataDeAgora.getTime()) / (1000 * 60 * 60 * 24));
+
+    if(diferencaDias < 0){
         return "Vencido";
     }
 
@@ -86,7 +92,7 @@ export function tempoRestante(prazo){
         return "Amanhã";
     }
     
-    if(diferencaDias === 0){
+    if(diferencaDias == 0){
         return "Hoje";
     }
     return undefined;
