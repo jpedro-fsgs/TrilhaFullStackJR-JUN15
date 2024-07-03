@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timezone
-from sqlalchemy import asc, case, desc
+from sqlalchemy import asc, case, desc, nulls_last
 from routes.auth import get_current_usuario
 from models.projects import MultProjetosInput, ProjetoDelete, ProjetoInput, ProjetoUpdate, ProjetosDelete
 from database.schema import Projeto, get_session, Session
@@ -11,14 +11,24 @@ router = APIRouter()
 
 @router.get('/')
 async def get_projetos_publicos(session: Session = Depends(get_session)):
-    projetos = session.query(Projeto)\
-        .options(joinedload(Projeto.usuario))\
-        .filter(Projeto.is_publico)\
-        .order_by(case((Projeto.prazo > datetime.now().date(), 0), else_=1), asc(Projeto.prazo))\
+    data_atual = datetime.now().date()
+    
+    projetos = (
+        session.query(Projeto)
+        .options(joinedload(Projeto.usuario))
+        .filter(Projeto.is_publico)
+        .order_by(
+            desc(Projeto.is_concluido),
+            case(
+                (Projeto.prazo == None, 2),
+                (Projeto.prazo > data_atual, 0),
+                else_=1
+            ),
+            asc(Projeto.prazo),
+            nulls_last(Projeto.prazo)
+        )
         .all()
-        # .order_by(asc(Projeto.prazo))\
-        # .filter(Projeto.prazo > datetime.now().date()).all()
-
+    )
     
     if projetos: 
         return [{
@@ -29,6 +39,7 @@ async def get_projetos_publicos(session: Session = Depends(get_session)):
             "descricao": projeto.descricao,
             "prazo": projeto.prazo,
             "usuario": projeto.usuario.username,
+            "is_concluido": projeto.is_concluido
         } for projeto in projetos]
     
     return []
@@ -62,6 +73,7 @@ async def registrar_projeto(user: Annotated[dict, Depends(get_current_usuario)],
                       link=projeto_input.link,
                       prazo=projeto_input.prazo,
                       is_publico=projeto_input.is_publico,
+                      is_concluido = projeto_input.is_concluido,
                       usuario_id=user["id"])
     session.add(projeto)
     session.commit()
@@ -84,6 +96,7 @@ async def registrar_multiplos_projetos(user: Annotated[dict, Depends(get_current
                               link=projeto_input.link,
                               prazo=projeto_input.prazo,
                               is_publico=projeto_input.is_publico,
+                              is_concluido = projeto_input.is_concluido,
                               usuario_id=user["id"])
             session.add(projeto)
             session.commit()
@@ -122,6 +135,8 @@ async def alterar_projeto(user: Annotated[dict, Depends(get_current_usuario)], p
 
     if projeto_update.is_publico != None:
         projeto.is_publico = projeto_update.is_publico
+    if projeto_update.is_concluido != None:
+        projeto.is_concluido = projeto_update.is_concluido
     
     session.add(projeto)
     session.commit()

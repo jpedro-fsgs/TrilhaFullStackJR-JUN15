@@ -1,6 +1,6 @@
 //importa a função pra receber o array de projetos
 import { importMeusProjetos} from "../data/data.js";
-import { tempoRestante } from "./ui_pagina_projetos_publicos.js";
+import { concluidoIcon, concluidoInfo, tempoRestante } from "./ui_pagina_projetos_publicos.js";
 import { slideDownAnchor } from "../main.js";
 import { linkIcon } from "./ui_adicionar_projetos.js";
 
@@ -22,7 +22,7 @@ export const isPublicoIcon = [
 
 
 //criação da página com informações de cada projeto
-function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link) {
+function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link, is_concluido) {
     projetoView.empty();
     
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
@@ -45,12 +45,13 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link) {
     const projetoViewBox = $(
         `<div class="container my-5">
             <div class="p-5 text-center bg-body-tertiary rounded-3">
-                <span id="horario" class="text-muted d-flex justify-content-between">
-                <span class="d-flex" style="gap:10px;">
-                    <p>${labelPrazo}</p>
-                    <p>${labelCriacao}</p>
-                </span>
-                ${isPublicoIcon[Number(is_publico)]}
+                <span id="horario" class="text-muted d-flex justify-content-between flex-wrap-reverse">
+                    <span class="d-flex" style="gap:10px;">
+                        <span>${is_concluido ? concluidoInfo : ""}</span>
+                        <p>${is_concluido ? "" : labelPrazo}</p>
+                        <p>${labelCriacao}</p>
+                    </span>
+                    ${isPublicoIcon[Number(is_publico)]}
                 </span>
                 <h1 class="text-body-emphasis mb-4">${nome}</h1>
                 ${labelLink}
@@ -64,7 +65,7 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link) {
 }
 
 //função que cria um item da lista , que mostra as informações do projeto ao ser clicado
-function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link) {
+function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link, is_concluido) {
 
     const itemLista = $(`<a id="${id}" role="button" class="list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
                             <div class="d-flex w-100 align-items-center justify-content-between">
@@ -75,12 +76,12 @@ function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link) {
                                     </span>
                                     ${link ? linkIcon : ""}
                                 </span>
-                                <small>${tempoRestante(prazo)}</small>
+                                <small>${is_concluido ? concluidoIcon : tempoRestante(prazo)}</small>
                             </div>
                         </a>`);
 
     itemLista.on("click", () => {
-        criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link);
+        criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link, is_concluido);
     })
     return itemLista;
 }
@@ -128,7 +129,7 @@ export async function showMeusProjetos() {
     //cria um item da lista pra cada projeto armazenado no array de projetos
     projetos.forEach(projeto => {
 
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico, projeto.link);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico, projeto.link, projeto.is_concluido);
         itemLista.on("click", () => {
             $(".list-group-item").removeClass("active");
             itemLista.addClass("active");

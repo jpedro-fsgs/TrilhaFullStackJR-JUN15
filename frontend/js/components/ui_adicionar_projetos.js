@@ -2,7 +2,7 @@
 //e setar o array de projetos global
 import { addProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos } from "../data/data.js";
 //função que recebe uma data e retorna uma indicação simples do prazo
-import { tempoRestante } from "./ui_pagina_projetos_publicos.js";
+import { concluidoIcon, tempoRestante } from "./ui_pagina_projetos_publicos.js";
 
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
@@ -28,10 +28,16 @@ export const linkIcon = `
 //formulário para adicionar novo projeto
 const adicionarFormBase = $(`
     <form id="add-projeto-form">
-        <select id="is-publico" class="form-select form-select-sm" style="width: 95px;" aria-label="Default select example">
-            <option value="privado" selected>Privado</option>
-            <option value="publico">Público</option>
-        </select>
+        <span class="d-flex justify-content-between">
+            <select id="is-publico" class="form-select form-select-sm" style="width: 95px;" aria-label="Default select example">
+                <option value="privado" selected>Privado</option>
+                <option value="publico">Público</option>
+            </select>
+            <span class="check-remove">
+                <input class="form-check-input" type="checkbox" value="" id="flexCheckConcluido">
+                <label class="form-check-label" for="flexCheckConcluido">&nbsp;&nbsp;Concluído</label>
+            </span>
+        </span>
         <h1 class="text-body-emphasis mb-5">Adicionar Projeto</h1>
         <div class="form-floating mb-3">
             <input required type="text" class="form-control" id="floatingNomeProjeto" placeholder="Nome do Projeto">
@@ -60,7 +66,7 @@ const adicionarFormBase = $(`
 
 
 //função que cria um item da lista, o item não é clicável e é indicado como desativado
-function criarItemLista(id, nome, prazo, is_publico, link) {
+function criarItemLista(id, nome, prazo, is_publico, link, is_concluido) {
 
     const itemLista = $(`<a id="${id}" role="button" class="disabled list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
                             <div class="d-flex w-100 align-items-center justify-content-between">
@@ -71,7 +77,7 @@ function criarItemLista(id, nome, prazo, is_publico, link) {
                                     </span>
                                     ${link ? linkIcon : ""}
                                 </span>
-                                <small>${tempoRestante(prazo)}</small>
+                                <small>${is_concluido ? concluidoIcon : tempoRestante(prazo)}</small>
                             </div>
                         </a>`);
 
@@ -84,7 +90,7 @@ function criarListaProjetos(projetos){
     listaProjetos.empty();
     projetos.forEach(projeto => {
 
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.prazo, projeto.is_publico, projeto.link);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.prazo, projeto.is_publico, projeto.link, projeto.is_concluido);
         listaProjetos.append(itemLista);
     });
 }
@@ -103,11 +109,13 @@ export function showAdicionarProjeto() {
     const inputCheckPrazo = adicionarForm.find("#flexCheckPrazo");
     const inputPrazo = adicionarForm.find("#floatingPrazo");
     const inputIsPublico = adicionarForm.find("#is-publico");
+    const inputIsConcluido = adicionarForm.find("#flexCheckConcluido");
     
     titulo.empty();
     listaProjetos.empty();
     projetoView.empty();
     projetoViewBoxText.empty()
+    projetoView.off();
 
     // append do formulário no container de texto
     projetoViewBoxText.append(adicionarForm);
@@ -157,9 +165,10 @@ export function showAdicionarProjeto() {
         //atribui o prazo caso o checkbox esteja marcado, atribui null caso contrário
         const prazo = inputCheckPrazo.is(":checked") && inputPrazo.val() ? new Date(inputPrazo.val() + "T23:59:59.999Z") : null;
         const is_publico = inputIsPublico.val() == "publico" ? true : false;
+        const is_concluido = inputIsConcluido.is(":checked");
         
         //cria um objeto com os atributos
-        const novoProjeto = {nome, descricao, link, prazo, is_publico}
+        const novoProjeto = {nome, descricao, link, prazo, is_publico, is_concluido}
         //envia o objeto como parametro para ser adicionado, e armazena o retorno
         const atualizacaoProjetos = await addProjeto(novoProjeto);
         //a chave "projetos" contém o array de projetos atualizado
@@ -169,7 +178,7 @@ export function showAdicionarProjeto() {
         // alert(`${nome} criado com sucesso!`);
         projetoViewBoxText.empty()
         projetoViewBoxText.append(`
-            <div class="alert alert-info" role="alert">
+            <div class="alert alert-success" role="alert">
                 ${nome} Adicionado!
             </div>`);
         const adicionarNovo = $(`<button type="button" class="btn btn-primary">Adicionar novo projeto</button>`);

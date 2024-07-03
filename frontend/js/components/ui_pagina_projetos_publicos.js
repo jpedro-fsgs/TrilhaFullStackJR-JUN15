@@ -15,9 +15,20 @@ const userIcon = `
         <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
     </svg>`;
 
+export const concluidoIcon = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+        <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
+    </svg>`;
+
+export const concluidoInfo = `
+    <span class="badge text-bg-success">
+        ${concluidoIcon}
+        Projeto Concluído
+    </span>`;
 
 //criação da página com informações de cada projeto
-function criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link) {
+function criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link, is_concluido) {
     projetoView.empty();
     
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
@@ -43,16 +54,19 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link) {
     const projetoViewBox = $(
         `<div class="container my-5">
             <div class="p-5 text-center bg-body-tertiary rounded-3">
-                <div id="horario" class="text-muted d-flex flex-wrap-reverse justify-content-between">
+                <div id="horario" class="text-muted d-flex flex-wrap-reverse flex-sm-wrap justify-content-between">
                     <span class="d-flex" style="gap:10px;">
-                        <p>${labelPrazo}</p>
+                        <span>${is_concluido ? concluidoInfo : ""}</span>
+                        <p>${is_concluido ? "" : labelPrazo}</p>
                         <p>${labelCriacao}</p>
                     </span>
+                    
                     <span class="d-flex" style="gap:10px;">
                         ${userIcon}
                         ${usuario}
                     </span>
                 </div>
+                
                 <h1 class="text-body-emphasis mb-4">${nome}</h1>
                 ${labelLink}
                 <p class="lead mt-4">${descricao ? descricao : ""}</p>
@@ -110,7 +124,7 @@ export function tempoRestante(prazo){
 }
 
 //função que cria um item da lista , que mostra as informações do projeto ao ser clicado
-function criarItemLista(id, nome, descricao, prazo, criacao, usuario, link) {
+function criarItemLista(id, nome, descricao, prazo, criacao, usuario, link, is_concluido) {
 
     const itemLista = $(`<a id="${id}" role="button" class="list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
                             <div class="d-flex w-100 align-items-center justify-content-between">
@@ -121,12 +135,12 @@ function criarItemLista(id, nome, descricao, prazo, criacao, usuario, link) {
                                     </span>
                                     ${link ? linkIcon : ""}
                                 </span>
-                                <small>${tempoRestante(prazo)}</small>
+                                <small>${is_concluido ? concluidoIcon : tempoRestante(prazo)}</small>
                             </div>
                         </a>`);
 
     itemLista.on("click", () => {
-        criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link);
+        criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link, is_concluido);
     })
     return itemLista;
 }
@@ -173,7 +187,7 @@ export async function showProjetosPublicos() {
     //cria um item da lista pra cada projeto armazenado no array de projetos
     projetos.forEach(projeto => {
 
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.usuario, projeto.link);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.usuario, projeto.link, projeto.is_concluido);
         itemLista.on("click", () => {
             $(".list-group-item").removeClass("active");
             itemLista.addClass("active");

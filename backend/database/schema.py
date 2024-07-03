@@ -25,7 +25,8 @@ class Projeto(Base):
     link = Column(Text, nullable=True)
     criacao = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     prazo = Column(DateTime, nullable=True)
-    is_publico = Column(Boolean)
+    is_publico = Column(Boolean, default=False)
+    is_concluido = Column(Boolean, default=False)
 
     usuario_id = Column(Integer, ForeignKey('usuario.id'))
 

@@ -24,26 +24,27 @@ const projetoViewBoxText = $(`<div id="view-box-text" class="p-4 text-center bg-
 const zeroPad = (num, places) => String(num).padStart(places, '0');
 
 //cria a página do projeto, com o formulário para edição
-function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, link) {
+function criarPaginaProjeto(id, nome, descricao, prazo, is_publico, link, is_concluido) {
     projetoViewBoxText.empty()
     projetoViewBox.empty()
     projetoView.empty();
+    projetoView.off();
 
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
-    const dateCriacao = new Date(criacao + 'Z');
     const datePrazo = new Date(prazo  + 'Z');
-
-    const labelCriacao = `<p>Criado: ${dateCriacao.toLocaleDateString('pt-BR')} </p>`;
 
     const adicionarForm = $(`
         <form id="add-projeto-form">
-            <span id="horario" class="text-muted d-flex">
-                <select id="is-publico" class="form-select form-select-sm mb-3" style="width: 95px;" aria-label="Default select example">
+            <span class="d-flex justify-content-between">
+                <select id="is-publico" class="form-select form-select-sm" style="width: 95px;" aria-label="Default select example">
                     <option ${is_publico ? "" : "selected"} value="privado">Privado</option>
                     <option ${is_publico ? "selected" : ""} value="publico">Público</option>
                 </select>
-                <p>${labelCriacao}</p>
+                <span class="check-remove">
+                    <input class="form-check-input" type="checkbox" value="" id="flexCheckConcluido">
+                    <label class="form-check-label" for="flexCheckConcluido">&nbsp;&nbsp;Concluído</label>
                 </span>
+            </span>
             <h1 class="text-body-emphasis mb-5">Editar ${nome}</h1>
             <div class="form-floating mb-3">
                 <input type="text" class="form-control" id="floatingNomeProjeto" placeholder="Nome do Projeto">
@@ -77,11 +78,15 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, lin
     const inputCheckPrazo = adicionarForm.find("#flexCheckPrazo");
     const inputPrazo = adicionarForm.find("#floatingPrazo");
     const inputIsPublico = adicionarForm.find("#is-publico");
+    const inputIsConcluido = adicionarForm.find("#flexCheckConcluido");
 
     //insere o nome e a descrição do projeto nos inputs
     inputNomeProjeto.val(nome);
     inputDescricaoProjeto.val(descricao);
     inputLinkProjeto.val(link);
+    if(is_concluido) inputIsConcluido.prop('checked', true);
+    else inputIsConcluido.prop('checked', false);
+    
     //atribui data mínima ao dia corrente, new Date().toLocaleDateString('fr-ca') retorna a data atual no formato aceito
     inputPrazo.attr("min", new Date().toLocaleDateString('fr-ca'));
     //inclui a data, caso não seja null
@@ -110,7 +115,6 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, lin
     //ação acionada ao enviar o formulário
     adicionarForm.on("submit", async(e) => {
         e.preventDefault();
-
         //armazena os dados do input
         let nomeEdit = inputNomeProjeto.val();
         let descricaoEdit = inputDescricaoProjeto.val();
@@ -118,6 +122,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, lin
         //atribui o prazo caso o checkbox esteja marcado, atribui null caso contrário
         let prazoEdit = inputCheckPrazo.is(":checked") ? (inputPrazo.val() ? new Date(inputPrazo.val() + "T23:59:59Z") : null) : null;
         let isPublicoEdit = inputIsPublico.val() === "publico" ? true : false;
+        let isConcluidoEdit = inputIsConcluido.is(":checked");
 
         //valores booleanos, indicando se há diferença entre os inputs e os valores armazenados
         //atribui falso caso o valor seja o mesmo, ou se for vazio
@@ -128,10 +133,11 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, lin
         //caso sejam truthy, a string é fatiada para desconsiderar o horário e comparar somente a data
         let prazoHasChanged = prazo && prazoEdit ? prazoEdit.toISOString().slice(0, 10) !== prazo.slice(0, 10) : prazoEdit !== prazo;
         let isPublicoHasChanged = isPublicoEdit !== is_publico
+        let isConcluidoHasChanged = isConcluidoEdit !== is_concluido;
 
 
         //caso não haja alteração em nenhum, a função é retornada e encerrada
-        if(!nomeHasChanged && !descricaoHasChanged && !prazoHasChanged && !isPublicoHasChanged && !linkHasChanged){
+        if(!nomeHasChanged && !descricaoHasChanged && !prazoHasChanged && !isPublicoHasChanged && !linkHasChanged && !isConcluidoHasChanged){
             return;
         }
 
@@ -143,7 +149,8 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, lin
             descricao: descricaoHasChanged ? descricaoEdit : null,
             link: linkHasChanged ? linkEdit : null,
             prazo: prazoHasChanged ? prazoEdit : prazo,
-            is_publico: isPublicoHasChanged ? isPublicoEdit : is_publico
+            is_publico: isPublicoHasChanged ? isPublicoEdit : is_publico,
+            is_concluido: isConcluidoHasChanged ? isConcluidoEdit : is_concluido
         }
         
         //confirma a alteração com o usuário
@@ -173,7 +180,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, lin
 }
 
 //cria os itens da lista, que ao ser clicado mostra a página de edição do projeto
-function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link) {
+function criarItemLista(id, nome, descricao, prazo, is_publico, link, is_concluido) {
 
     
     const itemLista = $(`<a id="${id}" role="button" class="list-group-item list-group-item-action py-3 lh-sm" aria-current="true">
@@ -194,7 +201,7 @@ function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link) {
                         </a>`);
 
     itemLista.on("click", () => {
-        criarPaginaProjeto(id, nome, descricao, prazo, criacao, is_publico, link);
+        criarPaginaProjeto(id, nome, descricao, prazo, is_publico, link, is_concluido);
     })
     return itemLista;
 }
@@ -204,7 +211,7 @@ function criarListaProjetos(projetos){
     
     listaProjetos.empty();
     projetos.forEach(projeto => {
-        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico, projeto.link);
+        const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.is_publico, projeto.link, projeto.is_concluido);
         listaProjetos.append(itemLista);
         itemLista.on("click", () => {
             $(".list-group-item").removeClass("active");
