@@ -12,7 +12,7 @@ function loadingSpinner(){
 }
 
 //URL da API
-const URL = "";
+const URL = "https://trilha-full-stack-jr-j-git-8a8bdb-joao-pedro-goncalves-projects.vercel.app";
 
 //requisita a lista de todos os projetos públicos
 export async function getProjetosPublicos(){
