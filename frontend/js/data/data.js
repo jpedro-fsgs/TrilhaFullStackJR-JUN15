@@ -12,7 +12,7 @@ function loadingSpinner(){
 }
 
 //URL da API
-const URL = "https://trilhafullstackjr-jun15-production-2f5f.up.railway.app";
+const URL = "";
 
 //requisita a lista de todos os projetos públicos
 export async function getProjetosPublicos(){

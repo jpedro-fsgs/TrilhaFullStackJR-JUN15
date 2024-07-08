@@ -19,14 +19,14 @@ Base = declarative_base()
 
 class Projeto(Base):
     __tablename__ = 'projeto'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     nome = Column(String(255), nullable=False)
     descricao = Column(Text, nullable=True)
     link = Column(Text, nullable=True)
     criacao = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     prazo = Column(DateTime, nullable=True)
-    is_publico = Column(Boolean, default=False)
-    is_concluido = Column(Boolean, default=False)
+    is_publico = Column(Boolean, nullable=False, default=False)
+    is_concluido = Column(Boolean, nullable=False, default=False)
 
     usuario_id = Column(Integer, ForeignKey('usuario.id'))
 
@@ -34,7 +34,7 @@ class Projeto(Base):
 
 class Usuario(Base):
     __tablename__ = 'usuario'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     username = Column(String(255), unique=True, nullable=False)
     hashed_senha = Column(String(255), nullable=False)
     ativo = Column(Boolean, default=True)
