@@ -26,12 +26,12 @@ function criarPaginaProjeto(nome, descricao, prazo, criacao, is_publico, link, i
     projetoView.empty();
     
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
-    const dateCriacao = new Date(criacao + 'Z');
-    const datePrazo = new Date(prazo  + 'Z');
+    const dateCriacao = new Date(criacao);
+    const datePrazo = new Date(prazo);
 
     //formatação das datas para horário e localização em pt-BR
     const labelCriacao = `Criado: ${dateCriacao.toLocaleDateString('pt-BR')}`;
-    const labelPrazo = prazo ? `Prazo: ${datePrazo.toLocaleDateString('pt-BR')}` : "";
+    const labelPrazo = prazo ? `Prazo: ${datePrazo.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}` : "";
     const labelLink = link ? `
     <span>
         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
@@ -86,6 +86,10 @@ function criarItemLista(id, nome, descricao, prazo, criacao, is_publico, link, i
     return itemLista;
 }
 
+export function sortMeusProjetos(a, b){
+    return new Date(b.criacao) - new Date(a.criacao);
+}
+
 //cria toda página de exibição do projeto, chamada ao clicar na aba Projetos
 export async function showMeusProjetos() {
     let projetos = importMeusProjetos();
@@ -127,7 +131,7 @@ export async function showMeusProjetos() {
 
 
     //cria um item da lista pra cada projeto armazenado no array de projetos
-    projetos.forEach(projeto => {
+    projetos.sort(sortMeusProjetos).forEach(projeto => {
 
         const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.is_publico, projeto.link, projeto.is_concluido);
         itemLista.on("click", () => {

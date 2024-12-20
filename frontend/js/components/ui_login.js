@@ -173,6 +173,10 @@ export function showLoginPage(){
         e.preventDefault();
         const token = await validar_usuario(username.val().trim(), password.val());
         if(!token){
+            if(token === undefined){
+                alert("Não foi possível estabelecer uma conexão");
+                return;
+            }
             if(!username.hasClass("is-invalid")){
                 username.addClass("is-invalid");
                 password.addClass("is-invalid");
@@ -181,8 +185,7 @@ export function showLoginPage(){
             return;
         }
 
-        localStorage.setItem('access_token', token.access_token);
-
+        localStorage.setItem('access_token', token.accessToken);
         await verifyLogado();
         $(".nav-link").removeClass("active");
         $("#meus-projetos").addClass("active");
@@ -228,7 +231,7 @@ export function showSignUp(){
         }
         const token = await validar_usuario(username.val().trim(), password.val());
 
-        localStorage.setItem('access_token', token.access_token);
+        localStorage.setItem('access_token', token.accessToken);
 
         await verifyLogado();
         $(".nav-link").removeClass("active");

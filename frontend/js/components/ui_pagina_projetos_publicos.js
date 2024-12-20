@@ -31,16 +31,12 @@ export const concluidoInfo = `
 function criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link, is_concluido) {
     projetoView.empty();
     
-    //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
-    const dateCriacao = new Date(criacao + 'Z');
+    const dateCriacao = new Date(criacao);
     const datePrazo = new Date(prazo);
-
-    dateCriacao.setHours(23, 59, 59);
-    datePrazo.setHours(23, 59, 59);
 
     //formatação das datas para horário e localização em pt-BR
     const labelCriacao = `Criado: ${dateCriacao.toLocaleDateString('pt-BR')}`;
-    const labelPrazo = prazo ? `Prazo: ${datePrazo.toLocaleDateString('pt-BR')}` : "";
+    const labelPrazo = prazo ? `Prazo: ${datePrazo.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}` : "";
     const labelLink = link ? `
     <span>
         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
@@ -86,12 +82,12 @@ export function tempoRestante(prazo){
     }
     
     const nowDate = Date.now()
-    const prazoDate = Date.parse(prazo)
+    const prazoDate = Date.parse(prazo + "T23:59:59");
 
     const dataDoPrazo = new Date(prazoDate);
     const dataDeAgora = new Date(nowDate);
-    dataDoPrazo.setHours(23, 59, 59);
-    dataDeAgora.setHours(0, 0, 0);
+    // dataDoPrazo.setHours(23, 59, 59);
+    // dataDeAgora.setHours(0, 0, 0);
 
     const diferencaDias = Math.floor((dataDoPrazo.getTime() - dataDeAgora.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -105,7 +101,7 @@ export function tempoRestante(prazo){
     }
     //retorna o mês do prazo, caso não seja o mês atual
     if(dataDoPrazo.getMonth() > dataDeAgora.getMonth() && diferencaDias > 7){
-        return dataDoPrazo.toLocaleDateString('pt-BR', {month: "short"}, { timeZone: 'UTC'})
+        return dataDoPrazo.toLocaleDateString('default', {month: "short"}, { timeZone: 'UTC'})
     }
 
     //retorna o número dias
@@ -143,6 +139,19 @@ function criarItemLista(id, nome, descricao, prazo, criacao, usuario, link, is_c
         criarPaginaProjeto(nome, descricao, prazo, criacao, usuario, link, is_concluido);
     })
     return itemLista;
+}
+
+function sortProjetosPublicos(a, b){
+    if (a.is_concluido !== b.is_concluido) return a.is_concluido ? -1 : 1;
+    
+    const agora = new Date();
+    const aPrazo = new Date(a.prazo + "T23:59:59");
+    const bPrazo = new Date(b.prazo + "T23:59:59");
+
+    if((aPrazo < agora) !== (bPrazo < agora)) return aPrazo < agora ? 1 : -1;
+    if(!a.prazo !== !b.prazo) return !a.prazo ? 1 : -1;
+
+    return aPrazo - bPrazo;
 }
 
 //cria toda página de exibição do projeto, chamada ao clicar na aba Projetos
@@ -185,7 +194,7 @@ export async function showProjetosPublicos() {
 
 
     //cria um item da lista pra cada projeto armazenado no array de projetos
-    projetos.forEach(projeto => {
+    projetos.sort(sortProjetosPublicos).forEach(projeto => {
 
         const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.criacao, projeto.usuario, projeto.link, projeto.is_concluido);
         itemLista.on("click", () => {

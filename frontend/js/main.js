@@ -109,14 +109,3 @@ if(isLogado()){
 else{
     botaoProjetosPublicos.click();
 }
-
-
-//clica na aba ao iniciar a página
-// botaoLogin.click()
-// botaoProjetosPublicos.click()
-// botaoMeusProjetos.click()
-// botaoAdicionar.click();
-// botaoEditar.click();
-// botaoRemover.click();
-
-

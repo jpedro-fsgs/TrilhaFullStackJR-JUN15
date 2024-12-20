@@ -2,6 +2,7 @@
 //e setar o array de projetos global
 import { removerProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos } from "../data/data.js";
 import { linkIcon } from "./ui_adicionar_projetos.js";
+import { sortMeusProjetos } from "./ui_pagina_meus_projetos.js";
 
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
@@ -88,7 +89,7 @@ function createListaParaRemover(removerSet, projetos, onlyText=false){
 function criarListaProjetos(projetos, setRemover){
     listaProjetos.empty();
     
-    projetos.forEach(projeto => {
+    projetos.sort(sortMeusProjetos).forEach(projeto => {
         const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.is_publico, projeto.link);
         listaProjetos.append(itemLista);
     });
@@ -160,9 +161,9 @@ export async function showRemoverProjetos() {
             setRemover.clear();
             listaParaRemover.html(createListaParaRemover(setRemover, atualizacaoProjetos["projetos"]));
             //a chave "projetos" contém o array de projetos atualizado
-            criarListaProjetos(atualizacaoProjetos["projetos"]["meus_projetos"], setRemover);
-            setMeusProjetos(atualizacaoProjetos["projetos"]["meus_projetos"]);
-            setProjetosPublicos(atualizacaoProjetos["projetos"]["projetos_publicos"])
+            criarListaProjetos(atualizacaoProjetos.userProjects, setRemover);
+            setMeusProjetos(atualizacaoProjetos.userProjects);
+            setProjetosPublicos(atualizacaoProjetos.publicProjects)
             exclusaoBotao.addClass("disabled");
 
         }

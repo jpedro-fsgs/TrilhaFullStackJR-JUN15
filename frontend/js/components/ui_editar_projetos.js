@@ -5,6 +5,7 @@ import { editarProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
 import { linkIcon } from "./ui_adicionar_projetos.js";
+import { sortMeusProjetos } from "./ui_pagina_meus_projetos.js";
 
 import { slideDownAnchor } from "../main.js";
 
@@ -31,7 +32,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, is_publico, link, is_con
     projetoView.off();
 
     //cria objeto Date a partir da string de datas de criação e prazo, com adição de 'Z' para horário em UTC
-    const datePrazo = new Date(prazo  + 'Z');
+    const datePrazo = new Date(prazo);
 
     const adicionarForm = $(`
         <form id="add-projeto-form">
@@ -93,7 +94,7 @@ function criarPaginaProjeto(id, nome, descricao, prazo, is_publico, link, is_con
     if(prazo){
         inputCheckPrazo.prop('checked', true);
         //insere a data no input, usando a função zeroPad para formatar os números
-        inputPrazo.val(`${datePrazo.getFullYear()}-${zeroPad(datePrazo.getMonth() + 1, 2)}-${zeroPad(datePrazo.getDate(), 2)}`);
+        inputPrazo.val(`${datePrazo.getUTCFullYear()}-${zeroPad(datePrazo.getUTCMonth() + 1, 2)}-${zeroPad(datePrazo.getUTCDate(), 2)}`);
 
     }
     else{
@@ -120,21 +121,18 @@ function criarPaginaProjeto(id, nome, descricao, prazo, is_publico, link, is_con
         let descricaoEdit = inputDescricaoProjeto.val();
         let linkEdit = inputLinkProjeto.val();
         //atribui o prazo caso o checkbox esteja marcado, atribui null caso contrário
-        let prazoEdit = inputCheckPrazo.is(":checked") ? (inputPrazo.val() ? new Date(inputPrazo.val() + "T23:59:59Z") : null) : null;
+        let prazoEdit = inputCheckPrazo.is(":checked") && inputPrazo.val() ? inputPrazo.val() : null;
         let isPublicoEdit = inputIsPublico.val() === "publico" ? true : false;
         let isConcluidoEdit = inputIsConcluido.is(":checked");
 
         //valores booleanos, indicando se há diferença entre os inputs e os valores armazenados
         //atribui falso caso o valor seja o mesmo, ou se for vazio
         let nomeHasChanged = nomeEdit !== nome && nomeEdit !== "";
-        let descricaoHasChanged = descricaoEdit !== descricao;
-        let linkHasChanged = linkEdit !==link;
-        //o valor de prazo pode ser null, então primeiro é verificado se tanto o prazo e prazoEdit são truthy
-        //caso sejam truthy, a string é fatiada para desconsiderar o horário e comparar somente a data
-        let prazoHasChanged = prazo && prazoEdit ? prazoEdit.toISOString().slice(0, 10) !== prazo.slice(0, 10) : prazoEdit !== prazo;
+        let descricaoHasChanged = descricaoEdit !== (descricao || "");
+        let linkHasChanged = linkEdit !== (link || "");
+        let prazoHasChanged = prazoEdit !== prazo
         let isPublicoHasChanged = isPublicoEdit !== is_publico
         let isConcluidoHasChanged = isConcluidoEdit !== is_concluido;
-
 
         //caso não haja alteração em nenhum, a função é retornada e encerrada
         if(!nomeHasChanged && !descricaoHasChanged && !prazoHasChanged && !isPublicoHasChanged && !linkHasChanged && !isConcluidoHasChanged){
@@ -145,25 +143,24 @@ function criarPaginaProjeto(id, nome, descricao, prazo, is_publico, link, is_con
         //a API somente altera o valor caso a string tenha algum conteúdo
         const novoProjeto = {
             id,
-            nome: nomeHasChanged ? nomeEdit : null, 
-            descricao: descricaoHasChanged ? descricaoEdit : null,
-            link: linkHasChanged ? linkEdit : null,
-            prazo: prazoHasChanged ? prazoEdit : prazo,
-            is_publico: isPublicoHasChanged ? isPublicoEdit : is_publico,
-            is_concluido: isConcluidoHasChanged ? isConcluidoEdit : is_concluido
+            ...(nomeHasChanged && {nome: nomeEdit}),
+            ...(descricaoHasChanged && {descricao: descricaoEdit}),
+            ...(linkHasChanged && {link: linkEdit}),
+            ...(prazoHasChanged && (prazoEdit == null ? {prazoNull: true} : {prazo: prazoEdit})),
+            ...(isPublicoHasChanged && {is_publico: isPublicoEdit}),
+            ...(isConcluidoHasChanged && {is_concluido: isConcluidoEdit}),
         }
         
         //confirma a alteração com o usuário
-        if(!confirm(`${nome} será alterado. Deseja continuar?`)
-        ){
+        if(!confirm(`${nome} será alterado. Deseja continuar?`)){
             return;
         }
         const atualizacaoProjetos = await editarProjeto(novoProjeto);
         
         //a chave "projetos" contém o array de projetos atualizado
-        criarListaProjetos(atualizacaoProjetos["projetos"]["meus_projetos"]);
-        setMeusProjetos(atualizacaoProjetos["projetos"]["meus_projetos"]);
-        setProjetosPublicos(atualizacaoProjetos["projetos"]["projetos_publicos"])
+        criarListaProjetos(atualizacaoProjetos.userProjects);
+        setMeusProjetos(atualizacaoProjetos.userProjects);
+        setProjetosPublicos(atualizacaoProjetos.publicProjects)
         adicionarForm.find("h1").text(`Editar ${nomeEdit || nome}`);
         
         alert(`${nomeEdit || nome} atualizado com sucesso!`);
@@ -210,7 +207,7 @@ function criarItemLista(id, nome, descricao, prazo, is_publico, link, is_conclui
 function criarListaProjetos(projetos){
     
     listaProjetos.empty();
-    projetos.forEach(projeto => {
+    projetos.sort(sortMeusProjetos).forEach(projeto => {
         const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.descricao, projeto.prazo, projeto.is_publico, projeto.link, projeto.is_concluido);
         listaProjetos.append(itemLista);
         itemLista.on("click", () => {

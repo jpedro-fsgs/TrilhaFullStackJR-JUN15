@@ -3,6 +3,7 @@
 import { addProjeto, importMeusProjetos, setMeusProjetos, setProjetosPublicos } from "../data/data.js";
 //função que recebe uma data e retorna uma indicação simples do prazo
 import { concluidoIcon, tempoRestante } from "./ui_pagina_projetos_publicos.js";
+import { sortMeusProjetos } from "./ui_pagina_meus_projetos.js";
 
 //ícone de público e privado
 import { isPublicoIcon } from "./ui_pagina_meus_projetos.js";
@@ -86,10 +87,8 @@ function criarItemLista(id, nome, prazo, is_publico, link, is_concluido) {
 
 //função que recebe o array de projetos e usa criarItemLista para criar cada um e dar append no elemento da lista
 function criarListaProjetos(projetos){
-    
     listaProjetos.empty();
-    projetos.forEach(projeto => {
-
+    projetos.sort(sortMeusProjetos).forEach(projeto => {
         const itemLista = criarItemLista(projeto.id, projeto.nome, projeto.prazo, projeto.is_publico, projeto.link, projeto.is_concluido);
         listaProjetos.append(itemLista);
     });
@@ -168,14 +167,21 @@ export function showAdicionarProjeto() {
         const is_concluido = inputIsConcluido.is(":checked");
         
         //cria um objeto com os atributos
-        const novoProjeto = {nome, descricao, link, prazo, is_publico, is_concluido}
+        const novoProjeto = {
+            nome,
+            ...(descricao && {descricao}),
+            ...(link && {link}),
+            ...(prazo && {prazo}),
+            is_publico,
+            is_concluido
+        }
         //envia o objeto como parametro para ser adicionado, e armazena o retorno
         const atualizacaoProjetos = await addProjeto(novoProjeto);
         //a chave "projetos" contém o array de projetos atualizado
-        criarListaProjetos(atualizacaoProjetos["meus_projetos"]);
-        setMeusProjetos(atualizacaoProjetos["meus_projetos"]);
-        setProjetosPublicos(atualizacaoProjetos["projetos_publicos"])
-        // alert(`${nome} criado com sucesso!`);
+        criarListaProjetos(atualizacaoProjetos.userProjects);
+        setMeusProjetos(atualizacaoProjetos.userProjects);
+        setProjetosPublicos(atualizacaoProjetos.publicProjects)
+
         projetoViewBoxText.empty()
         projetoViewBoxText.append(`
             <div class="alert alert-success" role="alert">

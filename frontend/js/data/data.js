@@ -12,7 +12,8 @@ function loadingSpinner(){
 }
 
 //URL da API
-const URL = "https://trilha-full-stack-jr-j-git-8a8bdb-joao-pedro-goncalves-projects.vercel.app";
+// const URL = "https://trilha-full-stack-jr-j-git-8a8bdb-joao-pedro-goncalves-projects.vercel.app";
+const URL = "http://140.238.184.168:8080/api";
 
 //requisita a lista de todos os projetos públicos
 export async function getProjetosPublicos(){
@@ -148,11 +149,11 @@ export async function removerProjeto(ids){
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
-        body: JSON.stringify({"ids": ids})
+        body: JSON.stringify(ids)
     };
 
     try{
-        const response = await fetch(`${URL}/projetos/deletar_varios`, options);
+        const response = await fetch(`${URL}/projetos/deletar`, options);
         if(response.status === 401){
             alert(`Sessão expirada. Faça login novamente`);
             logout();
@@ -163,8 +164,8 @@ export async function removerProjeto(ids){
         
         const data = await response.json();
 
-        if(data["projetos não encontrados"].length > 0){
-            throw new Error(`O seguintes projetos não puderam ser removidos ${data["projetos não encontrados"].join(" ")}`);
+        if(Object.keys(data.deletedProjects.failed).length > 0){
+            throw new Error(`Os projetos com os seguintes ids não puderam ser removidos ${Object.keys(data.deletedProjects.failed).join(" ")}`);
         }
         loadingSpinner();
         return data;
@@ -187,7 +188,7 @@ export async function cadastrar_usuario(username, password){
         },
         body: JSON.stringify({
             "username": username,
-            "senha": password
+            "password": password
         })
     };
     try{
@@ -228,7 +229,7 @@ export async function deletar_usuario(){
         
         const data = await response.json();
         loadingSpinner();
-        return data;
+        return data.isDeleted;
     }
     catch(error){
         alert("Não foi possível deletar a conta.")
@@ -246,9 +247,7 @@ export async function alterar_senha(password){
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
         body: JSON.stringify({
-            "username": "",
-            "senha": password,
-            "ativo": null
+            "password": password,
         })
     };
     try{
@@ -275,15 +274,15 @@ export async function validar_usuario(username, password){
     const options = {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
             "username": username,
             "password": password
         })
     };
     try{
-        const response = await fetch(`${URL}/auth/token`, options);
+        const response = await fetch(`${URL}/auth/login`, options);
         if(response.status === 401){
             loadingSpinner();
             return false;
@@ -315,7 +314,6 @@ export async function getUsuarioAtivo(){
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
     };
-
     try{
         const response = await fetch(`${URL}/auth/usuario`, options);
         if(response.status === 401){
